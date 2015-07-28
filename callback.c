@@ -9,7 +9,9 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
+#ifdef __linux__
 #include <link.h>
+#endif
 #include <ffi.h>
 #include <inttypes.h>
 

@@ -9,7 +9,10 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <libgen.h>
+#ifdef __linux__
 #include <link.h>
+#endif
 #include <ffi.h>
 #include <inttypes.h>
 
@@ -36,7 +39,9 @@ static const char * rtld_flags_encode(uint32_t n)
         [__builtin_ffs(RTLD_LAZY)]     = "RTLD_LAZY",
         [__builtin_ffs(RTLD_NOW)]      = "RTLD_NOW",
         [__builtin_ffs(RTLD_NOLOAD)]   = "RTLD_NOLOAD",
+#ifdef __linux__
         [__builtin_ffs(RTLD_DEEPBIND)] = "RTLD_DEEPBIND",
+#endif
         [__builtin_ffs(RTLD_GLOBAL)]   = "RTLD_GLOBAL",
         [__builtin_ffs(RTLD_NODELETE)] = "RTLD_NODELETE",
     };
@@ -129,7 +134,12 @@ static int open_dynamic_library(WORD_LIST *list)
                 flags |= RTLD_NOLOAD;
                 break;
             case 'd':
+#ifdef __linux__
                 flags |= RTLD_DEEPBIND;
+#else
+                puts("RTLD_DEEPBIND exists only on linux");
+                return 1;
+#endif
                 break;
             case 'g':
                 flags |= RTLD_GLOBAL;

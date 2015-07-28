@@ -9,7 +9,9 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
+#ifdef __linux
 #include <link.h>
+#endif
 #include <ffi.h>
 #include <inttypes.h>
 
@@ -84,8 +86,11 @@ static int pack_prefixed_array(WORD_LIST *list)
         }
 
         // Extract the data into the destination buffer.
+#ifdef __linux__
         source = mempcpy(source, value, ptrtype->size);
-
+#else
+        source = memcpy(source, value, ptrtype->size);
+#endif
         // No longer needed.
         free(value);
         return 0;
@@ -146,7 +151,12 @@ static int unpack_prefixed_array(WORD_LIST *list)
 
         // Truncate it if there's already a value, e.g.
         // a=(int:0 int:0) is accceptable to initialize a buffer.
+#ifdef __linux__
         *strchrnul(element->value, ':') = '\0';
+#else
+        if (format = strchr(element->value, ':'))
+          *format = '\0';
+#endif
 
         if (decode_type_prefix(element->value,
                                NULL,

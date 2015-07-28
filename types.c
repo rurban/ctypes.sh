@@ -9,7 +9,9 @@
 #include <stdint.h>
 #include <assert.h>
 #include <stdbool.h>
+#ifdef __linux__
 #include <link.h>
+#endif
 #include <ffi.h>
 #include <inttypes.h>
 
@@ -23,17 +25,24 @@
 
 bool decode_primitive_type(const char *parameter, void **value, ffi_type **type)
 {
-    const char *prefix;
+    char *prefix;
+    char *c;
 
     prefix  = NULL;
     *value  = NULL;
     *type   = NULL;
 
     // If a colon exists, then everything before it is a type
-    if (strchr(parameter, ':')) {
+    if ((c = strchr(parameter, ':'))) {
         // Extract the two components.
-        prefix    = strndupa(parameter, strchr(parameter, ':') - parameter);
-        parameter = strchr(parameter, ':') + 1;
+#ifdef __linux__
+        prefix    = strndupa(parameter, c - parameter);
+#else
+        prefix = alloca(c - parameter);
+        memcpy(prefix, parameter, c - parameter);
+        *strchr(prefix, ':') = '\0';
+#endif
+        parameter = c + 1;
     } else {
         intmax_t n;
         char *string;
